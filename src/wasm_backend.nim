@@ -36,7 +36,8 @@ proc get_wasm_build_flags*(nimVersion: string, linkFlags: openArray[string] = []
   else:
     #cmd.add " --passL:--entry=main"
     discard
-  let sdk = getEnv"WASI_SDK_PREFIX"
+  var sdk = getEnv"WASI_SDK_PATH"
+  if sdk == "": sdk = getEnv"WASI_SDK_PREFIX"
   template c(v) =
     cmd.add " --passC:" & v
   template l(v) =
@@ -45,7 +46,13 @@ proc get_wasm_build_flags*(nimVersion: string, linkFlags: openArray[string] = []
     assert not i.startsWith "--"
     l "--" & i
   if sdk == "":
-    raise newException(OSError, "please set WASI_SDK_PREFIX envvar")
+    let wasm_ld = findExe("wasm-ld")
+    if wasm_ld != "":
+      sdk = wasm_ld.parentDir.parentDir
+      if not dirExists sdk:
+        raise newException(OSError, "wasm-ld not in of typical structure (a.k.a. WASI_SDK_PATH/bin")
+    else:
+      raise newException(OSError, "please set WASI_SDK_PATH or WASI_SDK_PREFIX envvar")
   else:
     const target = "wasm32-wasip1"
     #XXX:wasmtime-BUG: if using wasm32-wasip2
