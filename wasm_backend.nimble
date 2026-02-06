@@ -6,6 +6,7 @@ description   = "To support WASM backend for nim"
 license       = "MIT"
 srcDir        = "src"
 binDir        = "bin"
+installExt    = @["nim"]
 
 namedBin["wasm_backend"] = "nim-wasm-build-flags"
 
