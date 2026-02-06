@@ -20,9 +20,11 @@ proc get_clang_major_version(ver_file_path: string): string =
       return
   raise newException(ValueError, "cannot parse clang version from " & ver_file_path)
 
-proc get_wasm_build_flags*(nimVersion: string = ""): string =
-  var cmd = " --threads:off -d:wasm -d:wasi --cpu:wasm32 --os:linux " &
-    "--passL:--export-all "
+const DefExports = "--export-all"
+proc get_wasm_build_flags*(nimVersion: string = "", exports: string = DefExports): string =
+  var cmd = " --threads:off -d:wasm -d:wasi --cpu:wasm32 --os:linux "
+  if exports.len > 0:
+    cmd.add "--passL:" & exports & ' '
   
   # XXX:NIM-BUG: if using orc/arc/refc
   # npython.wasm!addToSharedFreeListBigChunks...
@@ -83,10 +85,30 @@ proc get_wasm_build_flags*(nimVersion: string = ""): string =
   cmd
 
 when isMainModule:
-  import std/cmdline
-  let dstNimVersion =
-    if paramCount() == 0: ""
-    else: paramStr(1)
-  echo get_wasm_build_flags dstNimVersion
+  import std/parseopt
+  import std/sets
+  let falses = toHashSet ["no", "false", "off"]
+  var
+    dstNimVersion = ""
+    exports = DefExports
+  for (kind, k, val) in getopt():
+    case kind
+    of cmdEnd: doAssert false
+    of cmdLongOption:
+      if k.startsWith "export":
+        exports = "--"
+        exports.add k
+        if val.len > 0:
+          if k == "export-all" and val in falses:
+            exports = ""
+            continue
+          exports.add '='
+          exports.add val
+    # ignore more, reversed for further usage
+    of cmdShortOption: discard
+    of cmdArgument:
+      if dstNimVersion.len == 0:
+        dstNimVersion = k
+  echo get_wasm_build_flags(dstNimVersion, exports)
 
  
