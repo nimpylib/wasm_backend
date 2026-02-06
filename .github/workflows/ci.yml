@@ -1,0 +1,32 @@
+name: nimble test
+on:
+  push:
+    branches-ignore:
+      - 'feat-*'
+    paths:
+      - '**/*.nim'
+      - './*.nimble'
+      - 'tests/**'
+      - '.github/workflows/ci.yml'
+  pull_request:
+  workflow_dispatch:
+env:
+  nim-version: 'stable'
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Cache nimble
+      id: cache-nimble
+      uses: actions/cache@v4
+      with:
+        path: ~/.nimble
+        key: ${{ runner.os }}-nimble
+    - uses: jiro4989/setup-nim-action@v2
+      with:
+        nim-version: ${{ env.nim-version }}
+
+    - name: test
+      run: nimble test
+
