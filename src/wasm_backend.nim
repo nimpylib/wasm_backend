@@ -88,7 +88,7 @@ proc get_wasm_build_flags*(nimVersion: string, linkFlags: openArray[string] = []
 
     cmd.add " --clang.exe=" & sdk & "/bin/clang "
     cmd.add " --clang.linkerexe=" & sdk & "/bin/wasm-ld"
-    cmd.add " -d:nimPreviewSlimSystem"
+    #cmd.add " -d:nimPreviewSlimSystem"
   cmd
 
 when isMainModule:
