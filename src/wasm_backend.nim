@@ -23,13 +23,14 @@ proc get_clang_major_version(ver_file_path: string): string =
 proc get_wasm_build_flags*(nimVersion: string, linkFlags: openArray[string] = []): string =
   var cmd = " --threads:off -d:wasm -d:wasi --cpu:wasm32 --os:linux"
   
-  # XXX:NIM-BUG: if using orc/arc/refc
+  # XXX:NIM-BUG: if using orc/arc/refc directly
   # npython.wasm!addToSharedFreeListBigChunks...
   # with msg: 2: memory fault at wasm address 0x6e7583ec in linear memory of size 0xe0000
   #           3: wasm trap: out of bounds memory access
-  cmd.add " --mm:" &
-    #"arc"
-    "markAndSweep"
+  # WASI's POSIX mmap emulation can return memory at the current   linear
+  # memory boundary. Use Nim's malloc-backed page allocator instead;
+  # this requires a refcounted memory manager.
+  cmd.add " -d:nimAllocPagesViaMalloc"
   cmd.add " --exceptions:goto"
   if off: # will causes `env::memory`,etc not defined
     cmd.add " --app:lib"
