@@ -53,7 +53,13 @@ proc get_wasm_build_flags*(nimVersion: string, linkFlags: openArray[string] = []
       if not dirExists sdk:
         raise newException(OSError, "wasm-ld not in of typical structure (a.k.a. WASI_SDK_PATH/bin")
     else:
-      raise newException(OSError, "please set WASI_SDK_PATH or WASI_SDK_PREFIX envvar")
+      template setIfExists(d; elseDo) =
+        if dirExists d:
+          sdk = d
+        else:
+          elseDo
+      setIfExists "/opt/wasi-sdk":
+        raise newException(OSError, "please set WASI_SDK_PATH or WASI_SDK_PREFIX envvar")
   else:
     const target = "wasm32-wasip1"
     #XXX:wasmtime-BUG: if using wasm32-wasip2
