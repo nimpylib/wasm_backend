@@ -85,7 +85,10 @@ proc get_wasm_build_flags*(nimVersion: string, linkFlags: openArray[string] = []
 
     let sysroot_lib = sysroot & "/lib/"
     l "-L" & sysroot_lib & target
-    l sysroot_lib & "wasm32-wasi/crt1-command.o"  # this define `_start` that load `main`
+    var crt1_d = sysroot_lib & "wasm32-wasi"
+    if not dirExists crt1_d:
+      crt1_d = sysroot_lib & target
+    l crt1_d & "/crt1-command.o"  # this define `_start` that load `main`
 
     cmd.add " --clang.exe=" & sdk & "/bin/clang "
     cmd.add " --clang.linkerexe=" & sdk & "/bin/wasm-ld"
